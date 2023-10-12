@@ -1,21 +1,24 @@
 //Declaro variables globales de productos
 //PF PESOS
-const mon_peso = 1;
-const monto_pe_minimo = 1000;
-const plazo_pe_minimo = 30;
-const tasa_pe_30 = 180;
-const tasa_pe_60 = 182;
-const tasa_pe_90 = 184;
+const pf_peso = {
+    mon_peso: 1
+    , monto_pe_minimo: 1000
+    , tasa_pe_30: 180
+    , tasa_pe_60: 182
+    , tasa_pe_90: 184
+}
 
 //PF DOLARES
-const mon_dolar = 2;
-const monto_do_minimo = 500;
-const plazo_do_minimo = 30;
-const tasa_do_30 = 2;
-const tasa_do_60 = 2.1;
-const tasa_do_90 = 2.2;
+const pf_dolar = {
+    mon_dolar: 2
+    , monto_do_minimo: 500
+    , tasa_do_30: 2
+    , tasa_do_60: 2.1
+    , tasa_do_90: 2.2
+}
 
 //Declaro variables globales varias
+const plazo_minimo = 30;
 const salir = 0;
 let saludo = ''
 let moneda = -1;
@@ -30,6 +33,9 @@ let reinvertir_ok = false;
 let resultado = '';
 let int_a_cobrar = 0;
 let saldo_a_cobrar = 0;
+let array_capital = [];
+let array_int_a_cobrar = [];
+let array_saldo_a_cobrar = [];
 let txt_a_cobrar = '';
 
 //Funcion para evaluar si el cliente
@@ -37,14 +43,14 @@ let txt_a_cobrar = '';
 function supera_monto(monto_eval, moneda_eval) {
     switch (moneda_eval) {
         case 1:
-            if (monto_pe_minimo <= monto_eval) {
+            if (pf_peso.monto_pe_minimo <= monto_eval) {
                 return true;
                 break;
             } else {
                 return false;
             }
         case 2:
-            if (monto_do_minimo <= monto_eval) {
+            if (pf_dolar.monto_do_minimo <= monto_eval) {
                 return true;
                 break;
             } else {
@@ -55,27 +61,27 @@ function supera_monto(monto_eval, moneda_eval) {
 
 //Función para obtener la tasa a aplicar
 function obtengo_tasa() {
-    if (moneda == mon_peso) {
+    if (moneda == pf_peso.mon_peso) {
         switch (true) {
             case plazo < 60:
-                tasa = tasa_pe_30;
+                tasa = pf_peso.tasa_pe_30;
                 break;
             case plazo < 90:
-                tasa = tasa_pe_60;
+                tasa = pf_peso.tasa_pe_60;
                 break;
             default:
-                tasa = tasa_pe_90;
+                tasa = pf_peso.tasa_pe_90;
         }
     } else {
         switch (true) {
             case plazo < 60:
-                tasa = tasa_do_30;
+                tasa = pf_dolar.tasa_do_30;
                 break;
             case plazo < 90:
-                tasa = tasa_do_60;
+                tasa = pf_dolar.tasa_do_60;
                 break;
             default:
-                tasa = tasa_do_90;
+                tasa = pf_dolar.tasa_do_90;
         }
     }
     console.log('Función obtengo_tasa');
@@ -84,37 +90,54 @@ function obtengo_tasa() {
 
 //Función que calcula los resultados
 function calculo_pf() {
-    let contador = 1;
     saldo_a_cobrar = monto;
     for (let i = reinvertir; i >= 0; i--) {
-        txt_a_cobrar = txt_a_cobrar + 'El capital inicial al comenzar el Plazo Fijo ' + contador + ' es de ' + saldo_a_cobrar.toFixed(2) + ' \n';
+        array_capital.push(saldo_a_cobrar);
         int_a_cobrar = ((saldo_a_cobrar * tasa / 100) / 365) * plazo;
-        txt_a_cobrar = txt_a_cobrar + 'Los intereses al finalizar el Plazo Fijo ' + contador + ' seran de ' + int_a_cobrar.toFixed(2) + ' \n';
+        array_int_a_cobrar.push(int_a_cobrar);
         saldo_a_cobrar = saldo_a_cobrar + int_a_cobrar;
-        txt_a_cobrar = txt_a_cobrar + 'El saldo al finalizar el Plazo Fijo ' + contador + ' sera de ' + saldo_a_cobrar.toFixed(2) + ' \n\n';
+        array_saldo_a_cobrar.push(saldo_a_cobrar);
+    }
+
+    let contador = 1;
+    let fecha_inicio = new Date();
+    let fecha_fin = new Date();
+
+    fecha_fin.setDate(fecha_fin.getDate() + plazo);
+
+    for (let elemento = 0; elemento < array_saldo_a_cobrar.length; elemento++) {
+        txt_a_cobrar = txt_a_cobrar + 'El capital inicial al ' + fecha_inicio.toLocaleDateString() + ' es de $' + array_capital[elemento].toFixed(2) + ' \n';
+        txt_a_cobrar = txt_a_cobrar + 'Los intereses generados al ' + fecha_fin.toLocaleDateString() + ' seran de $' + array_int_a_cobrar[elemento].toFixed(2) + ' \n';
+        txt_a_cobrar = txt_a_cobrar + 'El saldo al finalizar el Plazo Fijo ' + contador + ' sera de $' + array_saldo_a_cobrar[elemento].toFixed(2) + ' \n\n';
+        fecha_inicio.setDate(fecha_inicio.getDate() + plazo);
+        fecha_fin.setDate(fecha_fin.getDate() + plazo);
         contador++;
     }
+
     alert(txt_a_cobrar);
+
 }
 
 //Saludo inicial
 saludo = '¡Bienvenido al simulador de Plazos Fijos! \n';
 saludo = saludo + 'Las condiciones son las siguientes: \n\n';
 saludo = saludo + 'Plazo Fijo en Pesos: \n';
-saludo = saludo + 'Monto mínimo: $ ' + monto_pe_minimo + ' \n';
-saludo = saludo + 'Plazo: 30 días // TEA: ' + tasa_pe_30 + '% \n';
-saludo = saludo + 'Plazo: 60 días // TEA: ' + tasa_pe_60 + '% \n';
-saludo = saludo + 'Plazo: 90 días // TEA: ' + tasa_pe_90 + '% \n\n';
+saludo = saludo + 'Plazo mínimo: ' + plazo_minimo + ' días \n';
+saludo = saludo + 'Monto mínimo: $' + pf_peso.monto_pe_minimo + ' \n';
+saludo = saludo + 'Plazo: 30 días // TEA: ' + pf_peso.tasa_pe_30 + '% \n';
+saludo = saludo + 'Plazo: 60 días // TEA: ' + pf_peso.tasa_pe_60 + '% \n';
+saludo = saludo + 'Plazo: 90 días // TEA: ' + pf_peso.tasa_pe_90 + '% \n\n';
 saludo = saludo + 'Plazo Fijo en Dólares: \n';
-saludo = saludo + 'Monto mínimo: U$s ' + monto_do_minimo + ' \n';
-saludo = saludo + 'Plazo: 30 días // TEA: ' + tasa_do_30 + '% \n';
-saludo = saludo + 'Plazo: 60 días // TEA: ' + tasa_do_60 + '% \n';
-saludo = saludo + 'Plazo: 90 días // TEA: ' + tasa_do_90 + '% \n\n';
+saludo = saludo + 'Plazo mínimo: ' + plazo_minimo + ' días \n';
+saludo = saludo + 'Monto mínimo: $' + pf_dolar.monto_do_minimo + ' \n';
+saludo = saludo + 'Plazo: 30 días // TEA: ' + pf_dolar.tasa_do_30 + '% \n';
+saludo = saludo + 'Plazo: 60 días // TEA: ' + pf_dolar.tasa_do_60 + '% \n';
+saludo = saludo + 'Plazo: 90 días // TEA: ' + pf_dolar.tasa_do_90 + '% \n\n';
 saludo = saludo + 'En ambos productos puede reinvertir hasta 3 veces el capital y los intereses obtenidos.';
 alert(saludo);
 
 //Selección de moneda
-while (moneda != mon_peso && moneda != mon_dolar && continuar == true) {
+while (moneda != pf_peso.mon_peso && moneda != pf_dolar.mon_dolar && continuar == true) {
     resultado = prompt('Por favor, elegí con que moneda querés operar: \n1 - Pesos \n2 - Dólares \n0 - Salir');
     moneda = parseInt(resultado);
     if (resultado === null || moneda == salir) {
@@ -123,7 +146,7 @@ while (moneda != mon_peso && moneda != mon_dolar && continuar == true) {
     } else if (resultado == '') {
         //El usuario presiono aceptar sin ingresar un valor
         alert('¡Ingrese una opción!');
-    } else if (moneda != mon_peso && moneda != mon_dolar && moneda != salir) {
+    } else if (moneda != pf_peso.mon_peso && moneda != pf_dolar.mon_dolar && moneda != salir) {
         alert('¡Elegiste una opción inválida!');
     }
     console.log('Selección de moneda');
@@ -169,8 +192,8 @@ while (plazo_ok != true && continuar == true) {
         alert('¡El valor ingresado no es un plazo!');
     } else if (plazo < 0) {
         alert('¡El plazo ingresado es negativo!');
-    } else if (plazo < plazo_pe_minimo) {
-        alert('¡El plazo ingresado no supera al mínimo de ' + plazo_pe_minimo + ' días!');
+    } else if (plazo < pf_peso.plazo_minimo) {
+        alert('¡El plazo ingresado no supera al mínimo de ' + pf_peso.plazo_minimo + ' días!');
     } else {
         plazo_ok = true;
     }
